@@ -100,18 +100,6 @@ logger = init_logger(__name__)
 # it avoids unintentional cuda initialization from torch.cuda.is_available()
 os.environ["PYTORCH_NVML_BASED_CUDA_CHECK"] = "1"
 
-# On MIG partitions, NVML access is restricted — PyTorch's
-# CUDACachingAllocator hits an NVML assertion when it calls NVML
-# internally during pool growth. Disable expandable_segments to
-# reduce (but not eliminate) NVML-dependent code paths.
-# Note: PYTORCH_NVML_BASED_CUDA_CHECK must stay "1" even on MIG,
-# because setting it to "0" causes early CUDA initialization that
-# breaks forked subprocesses.
-_nvidia_visible = os.environ.get("NVIDIA_VISIBLE_DEVICES", "")
-if _nvidia_visible.startswith("MIG-"):
-    os.environ.setdefault(
-        "PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:False")
-
 # see https://github.com/vllm-project/vllm/issues/10480 and
 # https://github.com/vllm-project/vllm/issues/10619.
 os.environ["TORCHINDUCTOR_COMPILE_THREADS"] = "1"
